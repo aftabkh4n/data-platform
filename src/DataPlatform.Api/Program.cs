@@ -1,3 +1,4 @@
+using DataPlatform.Api;
 using DataPlatform.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -26,6 +27,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<DataPlatformDbContext>();
     db.Database.Migrate();
+    await SeedData.SeedAsync(db);  
 }
 
 app.MapOpenApi();
