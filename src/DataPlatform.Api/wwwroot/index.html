@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Data Platform</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #1e2535;
+    }
+
+    header h1 { font-size: 1.4rem; font-weight: 600; letter-spacing: -0.02em; }
+    header h1 span { color: #6366f1; }
+    header p { font-size: 0.8rem; color: #64748b; margin-top: 3px; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 1.5rem;
+      background: #1a1f2e;
+      border: 1px solid #1e2535;
+      border-radius: 10px;
+      padding: 4px;
+      width: fit-content;
+    }
+
+    .tab {
+      padding: 7px 18px;
+      border-radius: 7px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      transition: all 0.15s;
+    }
+
+    .tab.active {
+      background: #6366f1;
+      color: white;
+    }
+
+    .tab:hover:not(.active) { color: #e2e8f0; }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .card {
+      background: #1a1f2e;
+      border: 1px solid #1e2535;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card h2 {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 1rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat {
+      background: #1a1f2e;
+      border: 1px solid #1e2535;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+    }
+
+    .stat .val {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      letter-spacing: -0.03em;
+    }
+
+    .stat .lbl {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 3px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      margin-bottom: 1rem;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 0.75rem; color: #64748b; }
+
+    input, select {
+      background: #0f1117;
+      border: 1px solid #1e2535;
+      border-radius: 8px;
+      padding: 7px 12px;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+      min-width: 120px;
+    }
+
+    input:focus, select:focus { border-color: #6366f1; }
+
+    button {
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    button:hover { background: #4f46e5; }
+    button.secondary {
+      background: transparent;
+      border: 1px solid #1e2535;
+      color: #94a3b8;
+    }
+    button.secondary:hover { border-color: #6366f1; color: #6366f1; background: transparent; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 8px 12px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid #1e2535;
+    }
+
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #1a1f2e;
+      color: #cbd5e1;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1e2535; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 500;
+    }
+
+    .badge-blue   { background: #1e3a5f; color: #60a5fa; }
+    .badge-green  { background: #14532d; color: #4ade80; }
+    .badge-purple { background: #2d1b69; color: #a78bfa; }
+    .badge-amber  { background: #451a03; color: #fbbf24; }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    .route-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #1e2535;
+    }
+
+    .route-bar:last-child { border-bottom: none; }
+
+    .route-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      min-width: 100px;
+    }
+
+    .bar-track {
+      flex: 1;
+      height: 6px;
+      background: #1e2535;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: #6366f1;
+      border-radius: 3px;
+      transition: width 0.6s ease;
+    }
+
+    .route-count {
+      font-size: 0.75rem;
+      color: #64748b;
+      min-width: 60px;
+      text-align: right;
+    }
+
+    .trend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 8px;
+    }
+
+    .trend-cell {
+      background: #0f1117;
+      border: 1px solid #1e2535;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .trend-cell .month { font-size: 0.7rem; color: #64748b; }
+    .trend-cell .price { font-size: 1rem; font-weight: 600; color: #e2e8f0; margin-top: 3px; }
+
+    .empty {
+      text-align: center;
+      padding: 2rem;
+      color: #374151;
+      font-size: 0.875rem;
+    }
+
+    .rec-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: #0f1117;
+      border: 1px solid #1e2535;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      transition: border-color 0.15s;
+    }
+
+    .rec-card:hover { border-color: #6366f1; }
+
+    .rec-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: #1a1f2e;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .rec-info { flex: 1; }
+    .rec-route { font-weight: 600; font-size: 0.9rem; }
+    .rec-meta { font-size: 0.75rem; color: #64748b; margin-top: 2px; }
+    .rec-price { font-size: 1.1rem; font-weight: 600; color: #4ade80; }
+
+    
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Data <span>Platform</span></h1>
+    <p>Travel analytics, search, and recommendations</p>
+  </div>
+</header>
+
+<div class="stats-grid" id="statsGrid">
+  <div class="stat"><div class="val" id="totalFlights">...</div><div class="lbl">Total flights</div></div>
+  <div class="stat"><div class="val" id="totalRoutes">...</div><div class="lbl">Unique routes</div></div>
+  <div class="stat"><div class="val" id="avgPrice">...</div><div class="lbl">Average price</div></div>
+  <div class="stat"><div class="val" id="totalUsers">...</div><div class="lbl">Users</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('search')">Search</button>
+  <button class="tab" onclick="showTab('analytics')">Analytics</button>
+  <button class="tab" onclick="showTab('recommendations')">Recommendations</button>
+</div>
+
+<!-- Search Panel -->
+<div class="panel active" id="panel-search">
+  <div class="card">
+    <h2>Search flights</h2>
+    <div class="form-row">
+      <div class="field">
+        <label>Origin</label>
+        <input id="s-origin" placeholder="LHR" style="width:80px"/>
+      </div>
+      <div class="field">
+        <label>Destination</label>
+        <input id="s-dest" placeholder="DXB" style="width:80px"/>
+      </div>
+      <div class="field">
+        <label>Airline</label>
+        <input id="s-airline" placeholder="Emirates" style="width:120px"/>
+      </div>
+      <div class="field">
+        <label>Max price</label>
+        <input id="s-price" type="number" placeholder="500" style="width:90px"/>
+      </div>
+      <div class="field">
+        <label>Page size</label>
+        <select id="s-pagesize" style="width:80px">
+          <option>10</option>
+          <option>20</option>
+          <option>50</option>
+        </select>
+      </div>
+      <button onclick="searchFlights(1)">Search</button>
+    </div>
+    <div id="search-results">
+      <div class="empty">Enter filters above and click Search</div>
+    </div>
+    <div class="pagination" id="search-pagination"></div>
+  </div>
+</div>
+
+<!-- Analytics Panel -->
+<div class="panel" id="panel-analytics">
+  <div class="card">
+    <h2>Popular routes</h2>
+    <div id="routes-chart"><div class="empty">Loading...</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Price trends</h2>
+    <div class="form-row">
+      <div class="field">
+        <label>Origin</label>
+        <input id="t-origin" value="LHR" style="width:80px"/>
+      </div>
+      <div class="field">
+        <label>Destination</label>
+        <input id="t-dest" value="DXB" style="width:80px"/>
+      </div>
+      <button onclick="loadTrends()">Load trends</button>
+    </div>
+    <div id="trends-chart"><div class="empty">Click Load trends</div></div>
+  </div>
+</div>
+
+<!-- Recommendations Panel -->
+<div class="panel" id="panel-recommendations">
+  <div class="card">
+    <h2>Personalised recommendations</h2>
+    <div class="form-row">
+      <div class="field">
+        <label>User</label>
+        <select id="user-select" style="width:200px">
+          <option value="">Select a user</option>
+        </select>
+      </div>
+      <button onclick="loadRecommendations()">Get recommendations</button>
+    </div>
+    <div id="rec-results"><div class="empty">Select a user to see recommendations</div></div>
+  </div>
+</div>
+
+<script>
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+let currentPage = 1;
+let lastSearch  = {};
+
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['search','analytics','recommendations'][i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+
+  if (name === 'analytics') loadPopularRoutes();
+}
+
+// Stats
+async function loadStats() {
+  try {
+    const [flights, routes, users] = await Promise.all([
+      fetch('/api/search/flights?pageSize=1').then(r => r.json()),
+      fetch('/api/analytics/popular-routes?top=100').then(r => r.json()),
+      fetch('/api/users').then(r => r.json())
+    ]);
+
+    document.getElementById('totalFlights').textContent =
+      flights.totalCount?.toLocaleString() ?? '—';
+    document.getElementById('totalRoutes').textContent =
+      routes.length ?? '—';
+    document.getElementById('totalUsers').textContent =
+      users.length ?? '—';
+
+    const prices = routes.map(r => r.averagePrice);
+    const avg    = prices.length
+      ? Math.round(prices.reduce((a,b) => a+b, 0) / prices.length)
+      : 0;
+    document.getElementById('avgPrice').textContent = '£' + avg;
+  } catch(e) {
+    console.error('Stats error', e);
+  }
+}
+
+// Search
+async function searchFlights(page = 1) {
+  currentPage = page;
+  const origin   = document.getElementById('s-origin').value.trim();
+  const dest     = document.getElementById('s-dest').value.trim();
+  const airline  = document.getElementById('s-airline').value.trim();
+  const price    = document.getElementById('s-price').value.trim();
+  const pageSize = document.getElementById('s-pagesize').value;
+
+  lastSearch = { origin, dest, airline, price, pageSize };
+
+  let url = `/api/search/flights?page=${page}&pageSize=${pageSize}`;
+  if (origin)  url += `&origin=${origin}`;
+  if (dest)    url += `&destination=${dest}`;
+  if (airline) url += `&airline=${airline}`;
+  if (price)   url += `&maxPrice=${price}`;
+
+  const res  = await fetch(url);
+  const data = await res.json();
+
+  const container = document.getElementById('search-results');
+
+  if (!data.items || data.items.length === 0) {
+    container.innerHTML = '<div class="empty">No flights found</div>';
+    document.getElementById('search-pagination').innerHTML = '';
+    return;
+  }
+
+  const airlineColors = {
+    'Emirates':        'badge-blue',
+    'British Airways': 'badge-purple',
+    'Qatar Airways':   'badge-green',
+    'Lufthansa':       'badge-amber',
+    'Turkish Airlines':'badge-blue'
+  };
+
+  container.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Flight</th>
+          <th>Route</th>
+          <th>Airline</th>
+          <th>Departure</th>
+          <th>Price</th>
+          <th>Seats</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.items.map(f => `
+          <tr>
+            <td style="font-family:monospace;color:#a78bfa">${f.flightNumber}</td>
+            <td>${f.origin} <span style="color:#64748b">→</span> ${f.destination}</td>
+            <td><span class="badge ${airlineColors[f.airline] || 'badge-blue'}">${f.airline}</span></td>
+            <td>${new Date(f.departureTime).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+            <td style="color:#4ade80;font-weight:600">£${f.price}</td>
+            <td style="color:#64748b">${f.seatsAvailable}</td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>`;
+
+  const pag = document.getElementById('search-pagination');
+  pag.innerHTML = `
+    <button class="secondary" onclick="searchFlights(${page-1})" ${page<=1?'disabled':''}>← Prev</button>
+    <span>Page ${data.page} of ${data.totalPages} &nbsp;·&nbsp; ${data.totalCount} results</span>
+    <button class="secondary" onclick="searchFlights(${page+1})" ${!data.hasNext?'disabled':''}>Next →</button>`;
+}
+
+// Popular routes
+async function loadPopularRoutes() {
+  const res    = await fetch('/api/analytics/popular-routes?top=10');
+  const routes = await res.json();
+  const max    = Math.max(...routes.map(r => r.flightCount));
+
+  document.getElementById('routes-chart').innerHTML = routes.map(r => `
+    <div class="route-bar">
+      <div class="route-label">${r.origin} → ${r.destination}</div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${Math.round(r.flightCount/max*100)}%"></div>
+      </div>
+      <div class="route-count">${r.flightCount} flights · £${Math.round(r.averagePrice)}</div>
+    </div>`).join('');
+}
+
+// Price trends
+async function loadTrends() {
+  const origin = document.getElementById('t-origin').value.trim();
+  const dest   = document.getElementById('t-dest').value.trim();
+
+  const res    = await fetch(`/api/analytics/price-trends?origin=${origin}&destination=${dest}`);
+  const trends = await res.json();
+
+  if (!trends.length) {
+    document.getElementById('trends-chart').innerHTML = '<div class="empty">No data for this route</div>';
+    return;
+  }
+
+  document.getElementById('trends-chart').innerHTML = `
+    <div class="trend-grid">
+      ${trends.map(t => `
+        <div class="trend-cell">
+          <div class="month">${MONTHS[t.month-1]} ${t.year}</div>
+          <div class="price">£${Math.round(t.averagePrice)}</div>
+          <div class="month">${t.flightCount} flights</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// Recommendations — load users first
+async function loadUsers() {
+  try {
+    const res   = await fetch('/api/users');
+    const users = await res.json();
+    const sel   = document.getElementById('user-select');
+
+    sel.innerHTML = '<option value="">Select a user</option>';
+    users.forEach(u => {
+      const opt       = document.createElement('option');
+      opt.value       = u.id;
+      opt.textContent = `${u.name} (${u.preferredOrigin}, £${u.maxBudget} budget)`;
+      sel.appendChild(opt);
+    });
+  } catch (e) {
+    console.error('Failed to load users', e);
+  }
+}
+
+async function loadRecommendations() {
+  const userId = document.getElementById('user-select').value;
+  if (!userId) { alert('Select a user first'); return; }
+
+  const res   = await fetch(`/api/recommendations/${userId}`);
+  const flights = await res.json();
+
+  if (!flights.length) {
+    document.getElementById('rec-results').innerHTML =
+      '<div class="empty">No recommendations found for this user</div>';
+    return;
+  }
+
+  document.getElementById('rec-results').innerHTML = flights.map(f => `
+    <div class="rec-card">
+      <div class="rec-icon">✈</div>
+      <div class="rec-info">
+        <div class="rec-route">${f.origin} → ${f.destination}</div>
+        <div class="rec-meta">${f.airline} · ${f.flightNumber} · ${new Date(f.departureTime).toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}</div>
+      </div>
+      <div class="rec-price">£${f.price}</div>
+    </div>`).join('');
+}
+
+loadStats();
+loadUsers();
+</script>
+</body>
+</html>

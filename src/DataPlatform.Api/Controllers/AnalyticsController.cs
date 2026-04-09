@@ -15,40 +15,44 @@ public class AnalyticsController(
 {
     // GET /api/analytics/popular-routes
     [HttpGet("popular-routes")]
-    public async Task<IActionResult> GetPopularRoutes([FromQuery] int top = 10)
+public async Task<IActionResult> GetPopularRoutes([FromQuery] int top = 10)
+{
+    var cacheKey = $"analytics:popular-routes:{top}";
+
+    var cached = await cache.GetStringAsync(cacheKey);
+    if (cached is not null)
     {
-        const string cacheKey = "analytics:popular-routes";
-
-        var cached = await cache.GetStringAsync(cacheKey);
-        if (cached is not null)
-            return Ok(JsonSerializer.Deserialize<object>(cached));
-
-        var routes = await db.Flights
-            .GroupBy(f => new { f.Origin, f.Destination })
-            .Select(g => new
-            {
-                Origin         = g.Key.Origin,
-                Destination    = g.Key.Destination,
-                FlightCount    = g.Count(),
-                AveragePrice   = Math.Round(g.Average(f => (double)f.Price), 2),
-                MinPrice       = g.Min(f => f.Price),
-                MaxPrice       = g.Max(f => f.Price)
-            })
-            .OrderByDescending(r => r.FlightCount)
-            .Take(top)
-            .ToListAsync();
-
-        await cache.SetStringAsync(cacheKey,
-            JsonSerializer.Serialize(routes),
-            new DistributedCacheEntryOptions
-            {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
-            });
-
-        logger.LogInformation("Popular routes query returned {Count} routes", routes.Count);
-
-        return Ok(routes);
+        // Deserialize back to the same anonymous-style shape
+        var cachedRoutes = JsonSerializer.Deserialize<List<PopularRoute>>(cached);
+        return Ok(cachedRoutes);
     }
+
+    var routes = await db.Flights
+        .GroupBy(f => new { f.Origin, f.Destination })
+        .Select(g => new PopularRoute
+        {
+            Origin       = g.Key.Origin,
+            Destination  = g.Key.Destination,
+            FlightCount  = g.Count(),
+            AveragePrice = Math.Round(g.Average(f => (double)f.Price), 2),
+            MinPrice     = g.Min(f => f.Price),
+            MaxPrice     = g.Max(f => f.Price)
+        })
+        .OrderByDescending(r => r.FlightCount)
+        .Take(top)
+        .ToListAsync();
+
+    await cache.SetStringAsync(cacheKey,
+        JsonSerializer.Serialize(routes),
+        new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15)
+        });
+
+    logger.LogInformation("Popular routes query returned {Count} routes", routes.Count);
+
+    return Ok(routes);
+}
 
     // GET /api/analytics/price-trends?origin=LHR&destination=DXB
     [HttpGet("price-trends")]
@@ -132,4 +136,14 @@ public class AnalyticsController(
 
         return Ok(peakTimes);
     }
+}
+
+public class PopularRoute
+{
+    public string Origin       { get; set; } = "";
+    public string Destination  { get; set; } = "";
+    public int    FlightCount  { get; set; }
+    public double AveragePrice { get; set; }
+    public decimal MinPrice    { get; set; }
+    public decimal MaxPrice    { get; set; }
 }
