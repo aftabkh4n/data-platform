@@ -5,3 +5,5 @@ src/DataPlatform.Api/appsettings.json
 .vs/
 .idea/
 .DS_Store
+.claude/
+.claude/
