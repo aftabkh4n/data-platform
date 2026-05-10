@@ -146,4 +146,4 @@ DataPlatform/
 | Redis caching on all read endpoints | Done |
 | Analytics endpoints | Done |
 | Personalised recommendations | Done |
-| Dashboard UI | In progress |
+| Dashboard UI | Done |
